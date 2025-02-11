@@ -55,8 +55,7 @@ n_process = 6
 # finetuning
 original_language_only = False
 one_subtitle_per_movie = False
-use_regex_tokenizer = False
-regex_tokenizer_pattern = r"\w+|[^\w\s]+"
+use_regex_tokenizer = True
 linestrip_pattern = " /-–\n\t\""
 lowcase_cutoff = 0.08 # set to 0.5 to get words faster
 md_summary_table = True
