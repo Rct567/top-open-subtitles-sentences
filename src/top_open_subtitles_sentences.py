@@ -6,6 +6,7 @@ import os
 import shutil
 import sys
 import time
+from typing import Iterable, Iterator, Sequence, TypeVar
 import zipfile
 import gzip
 import re
