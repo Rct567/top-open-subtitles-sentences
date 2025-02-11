@@ -143,7 +143,7 @@ non_latin_langs = ['ar', 'bg', 'bn', 'el', 'fa', 'he', 'hi', 'hy', 'ja', 'ka',
                    'kk', 'ko', 'mk', 'ml', 'ru', 'si', 'ta', 'te', 'th', 'uk',
                    'ur', 'ze_zh', 'zh_cn', 'zh_tw']
 
-def source_zipfile(langcode, source_data_type):
+def source_zipfile(langcode, source_data_type) -> str:
     url_base = "https://object.pouta.csc.fi/OPUS-OpenSubtitles/"
     if source_data_type == "raw":
         return (url_base + f"v2018/raw/{langcode}.zip")
@@ -157,27 +157,28 @@ def source_zipfile(langcode, source_data_type):
 
 basedatadir = "src/data"
 
-def rawdatadir(langcode):
+def rawdatadir(langcode) -> str:
     return f"{basedatadir}/{langcode}/raw"
 
-def parsedfile(langcode, source_data_type):
+def parsedfile(langcode, source_data_type) -> str:
     if source_data_type == "raw":
         return f"bld/tmp/{langcode}_raw.txt"
     if source_data_type == "text":
         return f"src/data/{langcode}/{langcode}_text.txt"
     if source_data_type == "tokenized":
         return f"src/data/{langcode}/{langcode}_tokenized.txt"
+    raise ValueError(f"Unknown source_data_type: {source_data_type}")
 
-def tmpfile(langcode):
+def tmpfile(langcode) -> str:
     return f"bld/tmp/{langcode}_raw.txt"
 
-def sentence_outfile(langcode):
+def sentence_outfile(langcode) -> str:
     return f"bld/top_sentences/{langcode}_top_sentences.csv"
 
-def word_outfile(langcode):
+def word_outfile(langcode) -> str:
     return f"bld/top_words/{langcode}_top_words.csv"
 
-def extra_sentences_to_exclude():
+def extra_sentences_to_exclude() -> dict:
     return (pd.read_csv(f"src/extra_settings/extra_sentences_to_exclude.csv")
             .to_dict('list'))
 
@@ -206,12 +207,12 @@ def download_data_and_extract(basedatadir, langcode, source_data_type):
     os.remove(f)
 
 
-def download_data_file(url, basedatadir, langcode):
+def download_data_file(url: str, basedatadir: str, langcode: str):
     extension = os.path.splitext(url)[1]
     local_filename = os.path.join(basedatadir, f"{langcode}{extension}")
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        total_length = int(r.headers.get('content-length'))
+        total_length = int(r.headers.get('content-length')) # type: ignore
         print(f"   downloading {total_length/1e6:.1f} MB...")
         print_period = max(round(total_length/download_chunk_size/10), 1)        
         download_length = 0
@@ -287,7 +288,7 @@ def parse_rawdatadir_to_tmpfile(langcode, rawdatadir, tmpfile,
               + "match original language")
 
 
-def check_if_original(infile, langcode):
+def check_if_original(infile: str, langcode: str) -> bool:
     global n_original_info
     fin = open(infile, 'r', encoding='utf-8')
     intext = fin.read()
@@ -304,7 +305,7 @@ def check_if_original(infile, langcode):
         return False
 
 
-def text_from_xmlfile(infile):
+def text_from_xmlfile(infile: str) -> str:
     text_lines = []
     with open(infile, 'r', encoding='utf-8') as fin:
         for line in fin:
@@ -315,23 +316,24 @@ def text_from_xmlfile(infile):
                 text_lines.append(stripped_line + "\n")
     return ''.join(text_lines)
 
+T = TypeVar('T')
 
-def batched(iterable, batch_size: int):
+def batched(iterable: Iterable[T], n: int) -> Iterator[tuple[T, ...]]:
     it = iter(iterable)
     while True:
-        batch = tuple(itertools.islice(it, batch_size))
+        batch = tuple(itertools.islice(it, n))
         if not batch:
             return
         yield batch
 
 
-def chunked_reader(file_path, lines_per_chunk):
+def chunked_reader(file_path, lines_per_chunk) -> Iterator[tuple[str, ...]]:
     with open(file_path, "r", encoding='utf-8') as f:
         for chunk in batched(f, lines_per_chunk):
             yield chunk
      
             
-def check_line_count(file_path):
+def check_line_count(file_path) -> int:
     with open(file_path, 'br') as f:
         nlines = sum(1 for i in f)
     if nlines == 0:
@@ -562,7 +564,7 @@ def get_spacy_pipeline(langcode):
     return nlp
 
 
-def join_to_min_length(strings, n: int):
+def join_to_min_length(strings: list[str], n: int):
     current_words: list[str] = []
     current_length = 0
 
@@ -609,7 +611,7 @@ def regex_tokenizer(text: str, lang_id: str) -> list[str]:
     tokens = [create_word_token(w, lang_id) for w in re.split(non_word_chars, text)]
     return [token for token in tokens if token]        
 
-def tokenize_lines(lines: list, langcode: str, get_spacy_pipeline) -> list[list[str]]:
+def tokenize_lines(lines: list[str], langcode: str, get_spacy_pipeline) -> list[list[str]]:
     
     using_regex_tokenizer = use_regex_tokenizer
     
@@ -636,7 +638,7 @@ def tokenize_lines(lines: list, langcode: str, get_spacy_pipeline) -> list[list[
         
     return dt
 
-def tokenize_lines_mp(lines, langcode, executor: ProcessPoolExecutor):
+def tokenize_lines_mp(lines: Sequence[str], langcode: str, executor: ProcessPoolExecutor):
 
     lines_batched = batched(lines, int(lines_per_chunk/(n_process*25)))
     tokenize_func = partial(tokenize_lines, langcode=langcode, get_spacy_pipeline=get_spacy_pipeline)
