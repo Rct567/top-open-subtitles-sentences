@@ -38,7 +38,6 @@ get_parsed_text = True
 get_sentences = True
 get_words = True
 get_words_using_tokenized = False
-get_summary_table = False
 delete_tmpfile = True
 delete_source_data = True
 always_keep_raw_data = True
@@ -59,7 +58,6 @@ one_subtitle_per_movie = False
 use_regex_tokenizer = True
 linestrip_pattern = " /-–\n\t\""
 lowcase_cutoff = 0.08 # set to 0.5 to get words faster
-md_summary_table = True
 
 # output settings
 n_top_sentences = 10000
@@ -768,26 +766,6 @@ def check_langcodes(langcodes):
             raise Exception(f"Error: Not a valid langcode: {langcode}")
 
 
-def summary_table(langcodes):
-    sc = pd.read_csv(total_counts_sentences_file)
-    wc = pd.read_csv(total_counts_words_file)
-    if md_summary_table:
-        (pd.DataFrame({"code": langcodes})
-         .assign(language=[languages[l] for l in st['code']])
-         .assign(sentences=[f"[{sc[l][0]:,}]({sentence_outfile(l)})"
-                            for l in st['code']])
-         .assign(words=[f"[{wc[l][0]:,}]({word_outfile(l)})"
-                        for l in st['code']])
-         .to_markdown("bld/summary_table.md", index=False,
-                      colalign=["left", "left", "right", "right"]))
-    else:
-        (pd.DataFrame({"code": langcodes})
-         .assign(language=[languages[l] for l in st['code']])
-         .assign(sentences=[sc[l][0] for l in st['code']])
-         .assign(words=[wc[l][0] for l in st['code']])
-         .to_csv("bld/summary_table.csv", index=False))
-
-
 def validate_ja_tokenizing():
 
     from itertools import chain
@@ -819,8 +797,6 @@ def main():
         if run_langcodes[0] == "ja":
             validate_ja_tokenizing()
         run_one_langcode(langcode, source_data_type)
-    if get_summary_table:
-        summary_table(run_langcodes)
 
 
 ###############################################################################
