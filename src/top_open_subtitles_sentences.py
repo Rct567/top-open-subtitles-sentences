@@ -786,7 +786,27 @@ def summary_table(langcodes):
          .to_csv("bld/summary_table.csv", index=False))
 
 
+def validate_ja_tokenizing():
+
+    from itertools import chain
+    
+    test_lines = {
+        "すもももももももものうち": ['すもも', 'も', 'もも', 'も', 'もも', 'の', 'うち'],
+        "こんにちは。私の名前はシャンです。": ["こんにちは", "私", "の", "名前", "は", "シャン", "です"],
+        "これはテストです。": ["これ", "は", "テスト", "です"],
+        "私の名前は太郎です 。": ["私", "の", "名前", "は", "太郎", "です"],
+        "あのイルカはとてもかわいい！": ["あの", "イルカ", "は", "とても", "かわいい"],
+        "君の言葉は深いですね。": ["君", "の", "言葉", "は", "深い", "です", "ね"],
+    }
+    
+    lines = list(test_lines.keys())
+    r = tokenize_lines(lines, 'ja', get_spacy_pipeline)
+    
+    assert r[0] == list(chain.from_iterable(test_lines.values()))
+    print("JA Tokenization test passed.")
+
 def main():
+    
     check_langcodes(run_langcodes)
     check_cwd()
     if os.path.exists(total_counts_sentences_file):
@@ -794,6 +814,8 @@ def main():
     if os.path.exists(total_counts_words_file):
             os.remove(total_counts_words_file)
     for langcode in run_langcodes:
+        if run_langcodes[0] == "ja":
+            validate_ja_tokenizing()
         run_one_langcode(langcode, source_data_type)
     if get_summary_table:
         summary_table(run_langcodes)
