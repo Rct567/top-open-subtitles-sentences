@@ -1,6 +1,30 @@
-# Top OpenSubtitles Sentences
+# OpenSubtitles2018 word frequency lists for FrequencyMan
 
-This repository provides cleaned frequency lists of the most common sentences and words for all the 62 languages in the [OpenSubtitles2018](https://opus.nlpl.eu/OpenSubtitles-v2018.php) corpus, plus customizable [Python code](#python-code) which reproduces these lists.
+This is a fork of [top-open-subtitles-sentences](https://github.com/orgtre/top-open-subtitles-sentences/), adjusted to produce _word frequency lists_ for the Anki plugin [FrequencyMan](https://github.com/Rct567/FrequencyMan).
+
+The [top-open-subtitles-sentences](https://github.com/orgtre/top-open-subtitles-sentences/) repository provides cleaned frequency lists of the most common sentences and words for all the 62 languages in the [OpenSubtitles2018](https://opus.nlpl.eu/OpenSubtitles-v2018.php) corpus, plus customizable [Python code](#python-code) which reproduces these lists.
+
+### Key differences from original repository in tokenization
+
+```python
+import re
+
+# top-open-subtitles-sentences:
+
+regex_tokenizer_pattern = r"\w+"
+result = re.findall(regex_tokenizer_pattern, "d'abord Simple sente-nce. EE.UU. Anna's visit. john's. o'clock")
+# ['d', 'abord', 'Simple', 'sente', 'nce', 'EE', 'UU', 'Anna', 's', 'visit', 'john', 's', 'o', 'clock']
+
+print(result)
+
+# This fork:
+
+regex_tokenizer_pattern = r"[\w\-\_\'\’\.\u0610-\u061A\u064B-\u065F]+"
+result = re.findall(regex_tokenizer_pattern, "d'abord Simple sente-nce. EE.UU. Anna's visit. john's. o'clock")
+# ["d'abord", 'Simple', 'sente-nce.', 'EE.UU.', "Anna's", 'visit.', "john's.", "o'clock"]
+
+print(result)
+```
 
 
 ## Lists of the most common sentences and words
@@ -76,57 +100,3 @@ The numbers in the **sentences** (or **words**) column give the total number of 
 
 Here "ze" stands for subtitle files containing dual Chinese and English subtitles.
 
-
-## The underlying corpus
-
-This repository is based on the OpenSubtitles2018 corpus, which is part of the OPUS collection. In particular, as primary source files the untokenized corpus files linked in the rightmost column language IDs of the first table [here](https://opus.nlpl.eu/OpenSubtitles-v2018.php) are taken. These contain the raw corpus text as a collection of xml subtitle files, which have been downloaded from [www.opensubtitles.org](https://www.opensubtitles.org) (see also their newer site [www.opensubtitles.com](https://www.opensubtitles.com)). Optionally, one can also use the pre-parsed and pre-tokenized source data files.
-
-[OpenSubtitles](https://www.opensubtitles.org) is an online community where anyone can upload and download subtitles. At the time of writing 6,404,981 subtitles are available, of these 3,735,070 are included in the [OpenSubtitles2018 corpus](https://opus.nlpl.eu/OpenSubtitles-v2018.php), which contains a total of 22.10 billion tokens (see the first columns in the second table of the preceding link for a per-language breakdown). See the following article for a detailed description of the corpus:
-
-> P. Lison and J. Tiedemann (2016) [OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles](http://www.lrec-conf.org/proceedings/lrec2016/pdf/947_Paper.pdf). In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016).
-
-
-## Python code
-
-### Usage
-
-First download this repository and install the dependencies listed in [pyproject.toml](pyproject.toml) (Python 3.8+ and a few Python packages). If you're using [Poetry](https://python-poetry.org) this can be done automatically by running `poetry install --all-extras` from the command line when at the root directory of the downloaded repository. This also installs extra tokenizers for Japanese, Thai, and Vietnamese. If you only are interested in sentences or only plan to use a simpler regex tokenizer, a minimal install with `poetry install --without words` will also do.
-
-Next adjust the *Settings* section of [src/top_open_subtitles_sentences.py](src/top_open_subtitles_sentences.py) to your liking, while optionally reading the *Info* section, before running the whole file. 
-
-
-### Features
-
-All 62 languages are supported (see the *Info* section of [src/top_open_subtitles_sentences.py](src/top_open_subtitles_sentences.py) for the full list).
-
-The Python code will by default first download the source data, parse it into a temporary file, and then construct the lists of most common sentences and (optionally) words from it. The lists also include the number of times each sentence or word occurs in the corpus.
-
-The following cleaning steps are performed (uncomment the respective lines in the code to skip them):
-
-- Whitespace, dashes, and other undesirable characters are stripped from the beginning and end of each sentence.
-- Entries consisting of only punctuation and numbers are removed.
-- Entries starting with a parenthesis are removed as these don't contain speech. Same for entries ending with a colon.
-- Entries containing Latin characters are removed for languages not using the Latin alphabet.
-- Sentences ending the same way up to " .?!¿¡" are combined into the most common form.
-- Words of differing cases are combined.
-- Sentences in [src/extra_settings/extra_sentences_to_exclude.csv](src/extra_settings/extra_sentences_to_exclude.csv) are excluded.
-
-[spaCy](https://spacy.io) is used to split sentences into words (tokenization).
-
-
-## Related work
-
-There exist at least two similar but older repositories (older versions of the corpus and older Python versions) which can parse the OpenSubtitles corpus but do not extract lists of the most frequent sentences and words: [AlJohri/OpenSubtitles](https://github.com/AlJohri/OpenSubtitles) and [domerin0/opensubtitles-parser](https://github.com/domerin0/opensubtitles-parser).
-
-The [orgtre/google-books-ngram-frequency](https://github.com/orgtre/google-books-ngram-frequency) repository constructs similar lists of the most frequent words and sequences of up to five words (ngrams) in the much larger Google Books Ngram Corpus.
-
-
-## Limitations and known problems
-
-If a movie or episode contains several different subtitle files for a given language in the raw corpus, then all of them are used when constructing the sentence/word lists. Since more popular movies and episodes tend to have more subtitle files, the resulting lists can hence be viewed as popularity-weighted. The option `one_subtitle_per_movie` exists for changing this.
-
-Many of the subtitle files are not in the same language as the movie they are subtitling. They are hence translations, often from English, and don't represent typical sentence and word usage in the subtitle language. Using the option `original_language_only` one can restrict to only subtitles in the same language as the movie/episode. However, for most languages only a small fraction of files contain original language metadata which matches the subtitle language. For English 31% of files match, Spanish 3%, French 5%, Italian 1%, German 5%, Swedish 2%, Dutch 0%, Japanese 4%, Korean 3%, and Chinese 0%. The directory [bld/original_language_only](bld/original_language_only) contains such restricted lists for a few selected languages. To test how representative the translations are, [src/tests.py](src/tests.py) computes the frequency [rank correlations](https://en.wikipedia.org/wiki/Spearman's_rank_correlation_coefficient) between these lists and the main unrestricted ones. For the top 1000 English and Spanish sentences one gets a correlation of 0.7, while for German it is only 0.5. The corresponding correlations for words are all at least 0.9.
-
-The sentence and word lists still contain entries which probably better are excluded for many purposes, like proper names. #TODO clean the lists more.
-
-The code in this repository is licensed under the [Creative Commons Attribution 3.0 Unported License](https://creativecommons.org/licenses/by/3.0/). The sentence and word lists come with the same license as [the underlying corpus](http://opus.nlpl.eu/OpenSubtitles-v2018.php). Issue reports and pull requests are most welcome!
