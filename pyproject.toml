@@ -6,7 +6,7 @@ authors = ["orgtre"]
 
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.11,<3.13"
 pandas = "^1.5.0"
 requests = "^2.28.1"
 pyarrow = "^9.0.0"
@@ -30,3 +30,6 @@ vietnamese = ["pyvi"]
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]
+exclude = ["bdl", "src/data", "src/test.py"]
