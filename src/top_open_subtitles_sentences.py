@@ -565,30 +565,40 @@ def create_word_token(text: str, lang_id) -> str:
     assert "\t" not in text and "\n" not in text and "\r" not in text
 
     token = text.strip(".,'’\"' \t\n\r!@#$%^&*()_-=+{}:\"<>?/;")
+    
+    if token == "":
+        return token
 
     if str(lang_id) in {"en", "fr", "it", "de", "es", "el"}:
         token = token.replace("’", "'")
         token = token.replace("`", "'")
 
     if str(lang_id) in {'en', 'nl', 'af'}:
-        if token[-1] == "s" and token[-2] == "'":
+        if len(token) > 2 and token[-1] == "s" and token[-2] == "'":
             token = token[:-2]
 
-    return token.lower()
+    return token
   
 def regex_tokenizer(text: str, lang_id: str) -> list[str]:
     text = str(text+" ").replace(". ", " ")
     # Arabic diacritical marks: u0610-\u061A\u064B-\u065F
     non_word_chars = r"[^\w\-\_\'\’\.\u0610-\u061A\u064B-\u065F]{1,}"
-    return [create_word_token(w, lang_id) for w in re.split(non_word_chars, text)]        
+    tokens = [create_word_token(w, lang_id) for w in re.split(non_word_chars, text)]
+    return [token for token in tokens if token]        
 
 def tokenize_lines(lines: list, langcode: str, get_spacy_pipeline) -> list[list[str]]:
+    
+    using_regex_tokenizer = use_regex_tokenizer
+    
+    if normalized_langcode(langcode) in {'zh', 'ja', 'th', 'lo', 'km'}:
+        using_regex_tokenizer = False
+    
     if source_data_type == "text":
         lines = (l.strip(linestrip_pattern) for l in lines)
     if source_data_type == "tokenized":
         # no tokenizer needed
         dt = [l.strip(linestrip_pattern).split(" ") for l in lines]
-    elif (use_regex_tokenizer
+    elif (using_regex_tokenizer
           or normalized_langcode(langcode) in langs_not_in_spacy):
         # use regex tokenizer
         dt = [regex_tokenizer(l, langcode) for l in lines]  
