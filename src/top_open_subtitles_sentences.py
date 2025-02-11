@@ -410,9 +410,8 @@ def parsedfile_to_top_sentences(parsedfile, outfile,
 
     # TODO try doing everything in a dictionary instead of using pandas
     d = pd.DataFrame(d.most_common(), columns=['sentence', 'count'])
-    d['count'] = pd.to_numeric(d['count'],
-                               downcast="unsigned") # saves ~50% memory
-    d = d.astype({"sentence":"string[pyarrow]"}) # saves ~66% memory
+    d['count'] = pd.to_numeric(d['count'], downcast="unsigned") # saves ~50% memory
+    d = d.astype({"sentence":"string"})
 
     d = collapse_if_only_ending_differently(d, "sentence", "count")
 
@@ -421,9 +420,7 @@ def parsedfile_to_top_sentences(parsedfile, outfile,
     except KeyError as e:
         print("   no extra sentences to exclude")
     
-    (d
-     .head(n_top_sentences)
-     .to_csv(outfile, index=False))
+    d.head(n_top_sentences).to_csv(outfile, index=False)
 
     
 def collapse_if_only_ending_differently(df, sentence, count):
@@ -489,17 +486,14 @@ def parsedfile_to_top_words(parsedfile, outfile, langcode, source_data_type):
                       if value >= min_count})
 
     d = pd.DataFrame(d.most_common(), columns=['word', 'count'])
-    d['count'] = pd.to_numeric(d['count'],
-                               downcast="unsigned") # saves ~50% memory
-    d = d.astype({"word":"string[pyarrow]"}) # saves ~66% memory
+    d['count'] = pd.to_numeric(d['count'], downcast="unsigned") # saves ~50% memory
+    d = d.astype({"word":"string"})
 
     d = collapse_case(d, "word", "count", "wordlow", lowcase_cutoff)
     
     #TODO add more cleaning steps from google-books-ngram-frequency repo
     
-    (d
-     .head(n_top_words)
-     .to_csv(outfile, index=False))
+    d.head(n_top_words).to_csv(outfile, index=False)
 
 
 current_spacy = None
