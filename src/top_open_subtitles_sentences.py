@@ -530,6 +530,30 @@ def get_spacy_pipeline(langcode):
         nlp = spacy.blank(lang_code_normalized).from_config(
             {"nlp": {"tokenizer": cfg}}
         )
+    elif lang_code_normalized == 'ja':
+        
+        # Japanese with MeCab tokenizer
+        nlp = spacy.blank(lang_code_normalized)
+        
+        # Define custom MeCab tokenizer
+        import MeCab
+        
+        class MecabTokenizer:
+            def __init__(self, nlp):
+                self.mecab = MeCab.Tagger()
+                self.vocab = nlp.vocab
+
+            def __call__(self, text):
+                tokens = []
+                node = self.mecab.parseToNode(text)
+                while node:
+                    if node.surface.strip():
+                        tokens.append(node.surface)
+                    node = node.next
+                return spacy.tokens.Doc(self.vocab, words=tokens)
+        
+        # Assign custom tokenizer
+        nlp.tokenizer = MecabTokenizer(nlp)
     else:
         nlp = spacy.blank(lang_code_normalized)
         
