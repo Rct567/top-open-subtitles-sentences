@@ -201,12 +201,11 @@ def download_data_and_extract(basedatadir, langcode, source_data_type):
                 shutil.copyfileobj(f_in, f_out)
     else:
         with zipfile.ZipFile(f, 'r') as zip_ref:
-            #zip_ref.extractall(os.path.join(basedatadir, f"{langcode}"))
             zip_ref.extractall(os.path.join(basedatadir, f"{langcode}/raw"))
     os.remove(f)
 
 
-def download_data_file(url: str, basedatadir: str, langcode: str):
+def download_data_file(url: str, basedatadir: str, langcode: str) -> str:
     extension = os.path.splitext(url)[1]
     local_filename = os.path.join(basedatadir, f"{langcode}{extension}")
     with requests.get(url, stream=True) as r:
@@ -226,8 +225,7 @@ def download_data_file(url: str, basedatadir: str, langcode: str):
     return local_filename
 
 
-def parse_rawdatadir_to_tmpfile(langcode, rawdatadir, tmpfile,
-                                year_min, year_max):  
+def parse_rawdatadir_to_tmpfile(langcode, rawdatadir, tmpfile, year_min, year_max) -> None:
     start = time.perf_counter()
     print("Parsing data:")
     if os.path.exists(tmpfile):
@@ -342,8 +340,7 @@ def check_line_count(file_path) -> int:
     return nlines
 
 
-def parsedfile_to_top_sentences(parsedfile, outfile,
-                                langcode, source_data_type):
+def parsedfile_to_top_sentences(parsedfile, outfile, langcode, source_data_type) -> None:
     print("Getting top sentences:")
     start = time.perf_counter()
     # Chunking is faster once the tmpfile is too large to fit in RAM
@@ -423,7 +420,7 @@ def parsedfile_to_top_sentences(parsedfile, outfile,
     d.head(n_top_sentences).to_csv(outfile, index=False)
 
     
-def collapse_if_only_ending_differently(df, sentence, count):
+def collapse_if_only_ending_differently(df: pd.DataFrame, sentence: str, count: str) -> pd.DataFrame:
     return (df
             .sort_values(by=[count], ascending=False)
             .assign(Sm1=df[sentence].str.strip(" .?!¿¡"))
@@ -434,7 +431,7 @@ def collapse_if_only_ending_differently(df, sentence, count):
             .reset_index(drop=True))
 
 
-def parsedfile_to_top_words(parsedfile, outfile, langcode, source_data_type):
+def parsedfile_to_top_words(parsedfile, outfile, langcode, source_data_type) -> None:
     print("Getting top words:")
     start = time.perf_counter()
     if not os.path.exists("bld/top_words"):
@@ -498,8 +495,9 @@ def parsedfile_to_top_words(parsedfile, outfile, langcode, source_data_type):
 
 current_spacy = None
 current_spacy_langcode = None
+import spacy
 
-def get_spacy_pipeline(langcode):
+def get_spacy_pipeline(langcode) -> spacy.language.Language:
     
     global current_spacy, current_spacy_langcode
     
@@ -507,8 +505,6 @@ def get_spacy_pipeline(langcode):
     
     if current_spacy and current_spacy_langcode == lang_code_normalized:
         return current_spacy
-    
-    import spacy
     
     model_mapping = {
         #"zh": "zh_core_web_sm",
@@ -544,7 +540,7 @@ def get_spacy_pipeline(langcode):
                     if node.surface.strip():
                         tokens.append(node.surface)
                     node = node.next
-                return spacy.tokens.Doc(self.vocab, words=tokens)
+                return spacy.tokens.Doc(self.vocab, words=tokens) # type: ignore
         
         # Assign custom tokenizer
         nlp.tokenizer = MecabTokenizer(nlp)
@@ -557,7 +553,7 @@ def get_spacy_pipeline(langcode):
     return nlp
 
 
-def join_to_min_length(strings: list[str], n: int):
+def join_to_min_length(strings: list[str], n: int) -> Iterator[str]:
     current_words: list[str] = []
     current_length = 0
 
@@ -612,7 +608,7 @@ def tokenize_lines(lines: list[str], langcode: str, get_spacy_pipeline) -> list[
         using_regex_tokenizer = False
     
     if source_data_type == "text":
-        lines = (l.strip(linestrip_pattern) for l in lines)
+        lines = [l.strip(linestrip_pattern) for l in lines]
     if source_data_type == "tokenized":
         # no tokenizer needed
         dt = [l.strip(linestrip_pattern).split(" ") for l in lines]
@@ -631,15 +627,14 @@ def tokenize_lines(lines: list[str], langcode: str, get_spacy_pipeline) -> list[
         
     return dt
 
-def tokenize_lines_mp(lines: Sequence[str], langcode: str, executor: ProcessPoolExecutor):
-
+def tokenize_lines_mp(lines: Sequence[str], langcode: str, executor: ProcessPoolExecutor) -> Iterator[str]:
     lines_batched = batched(lines, int(lines_per_chunk/(n_process*25)))
     tokenize_func = partial(tokenize_lines, langcode=langcode, get_spacy_pipeline=get_spacy_pipeline)
     dt = itertools.chain.from_iterable(executor.map(tokenize_func, lines_batched))  
     return itertools.chain.from_iterable(dt)
 
 
-def normalized_langcode(langcode):
+def normalized_langcode(langcode) -> str:
     if langcode == "ze_en" or langcode == "ze_zh":
         return langcode.split("_")[1]
     else:
@@ -666,7 +661,7 @@ def collapse_case(df, word, count, wordlow, cutoff=0.5):
                 .reset_index(drop=True))
 
 
-def wordcase_by_cutoff(df, word, count, wordlow, cutoff):
+def wordcase_by_cutoff(df: pd.DataFrame, word: str, count: str, wordlow: str, cutoff: float) -> pd.Series:
     """Return series of word case and count based on a cutoff value.
     If it exists, the lowercase version of 'word' is returned as long
     as its share of all words in 'df' is larger than 'cutoff'.
