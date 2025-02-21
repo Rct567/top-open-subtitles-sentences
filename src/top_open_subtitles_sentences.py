@@ -60,8 +60,8 @@ linestrip_pattern = " /-–\n\t\""
 lowcase_cutoff = 0.08 # set to 0.5 to get words faster
 
 # output settings
-n_top_sentences = 10000
-n_top_words = 30000
+n_top_sentences = 10_000
+n_top_words = 50_000
 
 
 ###############################################################################
