@@ -588,13 +588,14 @@ def create_word_token(text: str, lang_id) -> str:
         token = token.replace("`", "'")
 
     if str(lang_id) in {'en', 'nl', 'af'}:
-        if len(token) > 2 and token[-1] == "s" and token[-2] == "'":
+        if len(token) > 2 and token[-2] == "'" and token[-1].lower() == "s":
             token = token[:-2]
 
     return token
   
 def regex_tokenizer(text: str, lang_id: str) -> list[str]:
     text = str(text+" ").replace(". ", " ")
+    text = text.replace("--", " ").replace("__", " ")
     # Arabic diacritical marks: u0610-\u061A\u064B-\u065F
     non_word_chars = r"[^\w\-\_\'\’\.\u0610-\u061A\u064B-\u065F]{1,}"
     tokens = [create_word_token(w, lang_id) for w in re.split(non_word_chars, text)]
