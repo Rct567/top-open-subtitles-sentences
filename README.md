@@ -2,7 +2,7 @@
 
 This is a fork of [top-open-subtitles-sentences](https://github.com/orgtre/top-open-subtitles-sentences/), adjusted to produce _word frequency lists_ for the Anki plugin [FrequencyMan](https://github.com/Rct567/FrequencyMan).
 
-The [top-open-subtitles-sentences](https://github.com/orgtre/top-open-subtitles-sentences/) repository provides cleaned frequency lists of the most common sentences and words for all the 62 languages in the [OpenSubtitles2018](https://opus.nlpl.eu/OpenSubtitles-v2018.php) corpus, plus customizable [Python code](#python-code) which reproduces these lists.
+> The [top-open-subtitles-sentences](https://github.com/orgtre/top-open-subtitles-sentences/) repository provides cleaned frequency lists of the most common sentences and words for all the 62 languages in the [OpenSubtitles2018](https://opus.nlpl.eu/OpenSubtitles-v2018.php) corpus, plus customizable [Python code](#python-code) which reproduces these lists.
 
 ### Key differences from original repository in tokenization
 
@@ -28,10 +28,6 @@ print(result)
 
 
 ## Lists of the most common sentences and words
-
-Clicking on a link in the **sentences** (or **words**) column of the table below brings up a list of the 10,000 most common sentences (or 30,000 most common words) in the **language** on the corresponding row. All lists can also be found in the [bld](bld) directory.
-
-The numbers in the **sentences** (or **words**) column give the total number of sentences (or words), including duplicates, on which the linked lists are based. These numbers differ from the ones given for the underlying corpus at [OpenSubtitles2018](https://opus.nlpl.eu/OpenSubtitles-v2018.php), primarily because they exclude the sentences and words which are removed when [cleaning](#features). Each list also contains a **count** column, which gives the number of times that particular sentence/word occurs in the underlying corpus.
 
 | code  | language           |                                                sentences |                                              words |
 |:------|:-------------------|---------------------------------------------------------:|---------------------------------------------------:|
